@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة علم الفرائض</title>
+    <link href="/static/style.css" rel="stylesheet">
+    <style>body{font-family: Cairo, Arial, sans-serif}</style>
+</head>
+<body>
+    <header>
+        <div class="logo">منصة علم الفرائض</div>
+        <nav>
+            <a href="/">الرئيسية</a>
+            <a href="/lessons">الدروس</a>
+            {% if session.username %}
+            <a href="/dashboard">لوحة الطالب</a>
+            <a href="/logout">تسجيل الخروج</a>
+            {% else %}
+            <a href="/login">تسجيل الدخول</a>
+            <a href="/register">إنشاء حساب</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>مرحباً بك في منصة علم الفرائض</h1>
+            <p>تعلّم بطريقة منظمة</p>
+            <form action="/lessons" method="get" class="search-box">
+                <input name="q" type="text" placeholder="ابحث عن درس...">
+                <button type="submit">بحث</button>
+            </form>
+        </section>
+
+        <div class="container">
+            <div class="section-title"><h2>أحدث الدروس</h2></div>
+            <div class="cards">
+                {% for l in lessons %}
+                <div class="card lessons-card">
+                    <h3>{{ l.title }}</h3>
+                    <p>{{ l.description }}</p>
+                    <a href="/lesson/{{ l.id }}">عرض الدرس</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <footer><p>منصة علم الفرائض</p></footer>
+</body>
+</html>

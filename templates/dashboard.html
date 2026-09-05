@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>لوحة الطالب</title>
+    <link href="/static/style.css" rel="stylesheet">
+    <style>body{font-family:Cairo,Arial,sans-serif}</style>
+</head>
+<body>
+    <main class="container">
+        <h2>مرحبا، {{ user.username }}</h2>
+
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+            <div class="muted">عدد الدروس المكتملة: <strong>{{ completed_count or 0 }}</strong></div>
+            <a class="btn" href="/lessons">اذهب إلى الدروس</a>
+            <a class="btn" href="/logout">تسجيل الخروج</a>
+        </div>
+
+        <form method="get" action="/dashboard" class="search-box">
+            <input name="q" placeholder="ابحث عن درس..." value="{{ search_query or '' }}">
+            <button type="submit">بحث</button>
+        </form>
+
+        <section>
+            <h3>الدروس</h3>
+            <div class="cards">
+                {% for l in lessons %}
+                <div class="card lessons-card">
+                    <h4>{{ l.title }}</h4>
+                    <p>{{ l.description }}</p>
+                    <a href="/lesson/{{ l.id }}">عرض الدرس</a>
+                </div>
+                {% else %}
+                <p>لا توجد دروس.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        {% if total > per_page %}
+        <div style="margin-top:18px;text-align:center">
+            {% set last_page = (total // per_page) + (1 if total % per_page else 0) %}
+            {% if page > 1 %}
+                <a class="btn" href="?q={{ search_query }}&page={{ page-1 }}">الصفحة السابقة</a>
+            {% endif %}
+            <span class="muted">صفحة {{ page }} من {{ last_page }}</span>
+            {% if page < last_page %}
+                <a class="btn" href="?q={{ search_query }}&page={{ page+1 }}">الصفحة التالية</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <section>
+            <h3>نشاطك الأخير</h3>
+            <ul>
+                {% for a in activities %}
+                <li>{{ a.timestamp.strftime('%Y-%m-%d %H:%M') }} - {{ a.action }} - الدرس: {{ a.lesson_id }}</li>
+                {% else %}
+                <li>لا توجد نشاطات بعد.</li>
+                {% endfor %}
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

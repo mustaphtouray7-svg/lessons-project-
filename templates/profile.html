@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>الملف الشخصي</title>
+    <link href="/static/style.css" rel="stylesheet">
+    <style>body{font-family:Cairo,Arial,sans-serif}</style>
+</head>
+<body>
+    <main class="container">
+        <h2>الملف الشخصي</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for cat, msg in messages %}
+              <div class="flash {{ cat }}">{{ msg }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="post" action="/profile">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label>الاسم</label>
+            <input name="username" value="{{ user.username }}" required>
+            <label>البريد الإلكتروني (لا يمكن تغييره)</label>
+            <input value="{{ user.email }}" disabled>
+
+            <h4>تغيير كلمة المرور (اختياري)</h4>
+            <label>كلمة المرور الجديدة</label>
+            <input name="password" type="password">
+            <label>تأكيد كلمة المرور</label>
+            <input name="confirm" type="password">
+
+            <button type="submit">حفظ التغييرات</button>
+        </form>
+
+        <p><a href="/dashboard">العودة إلى اللوحة</a></p>
+    </main>
+</body>
+</html>

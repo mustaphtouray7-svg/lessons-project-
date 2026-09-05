@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>جميع الدروس</title>
+    <link href="/static/style.css" rel="stylesheet">
+    <style>body{font-family:Cairo,Arial,sans-serif}</style>
+</head>
+<body>
+    <main class="container">
+        <h2>الدروس</h2>
+        <form method="get" action="/lessons" class="search-box">
+            <input name="q" placeholder="ابحث عن درس..." value="مقدمة">
+            <button type="submit">بحث</button>
+        </form>
+
+        <div class="cards">
+            
+            <div class="card lessons-card">
+                <h4>درس 1: مقدمة في الفرائض</h4>
+                <p>مقدمة حول أساسيات الفرائض</p>
+                <a href="/lesson/1">عرض الدرس</a>
+            </div>
+            
+        </div>
+
+        
+    </main>
+</body>
+</html>
