@@ -420,5 +420,8 @@ if __name__ == '__main__':
     # ensure DB/tables exist before first request (Flask 3 removed before_first_request)
     with app.app_context():
         create_tables_and_seed()
+if __name__ == '__main__':
+    with app.app_context():
+        create_tables_and_seed()
 
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)), debug=False)
