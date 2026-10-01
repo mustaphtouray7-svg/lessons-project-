@@ -79,6 +79,18 @@ if DATABASE_PATH_CONFIGURED:
             "starting the app."
         )
 
+DATABASE_URL = (
+    os.environ.get("DATABASE_URL")
+    or os.environ.get("DATABASE_CONNECTION_STRING")
+)
+
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgres://",
+        "postgresql://",
+        1
+    )
+
 
 app = flask.Flask(
     __name__,
@@ -91,12 +103,18 @@ app.config["SECRET_KEY"] = os.environ.get(
     "dev-secret-please-change"
 )
 
-app.config["SQLALCHEMY_DATABASE_URI"] = URL.create(
-    "sqlite",
-    database=DATABASE_PATH,
-)
+if DATABASE_URL:
+    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = (
+        f"sqlite:///{DATABASE_PATH}"
+    )
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_pre_ping": True
+}
 
 
 # ---------------------------------------------------------
@@ -290,7 +308,7 @@ def admin_required(fn):
     def wrapper(*args, **kwargs):
 
         if "user_id" not in session:
-            return redirect(url_for("login"))
+            return redirect(url_for("admin_login"))
 
         user = db.session.get(
             User,
@@ -409,11 +427,6 @@ def create_tables_and_seed():
 
     inspector = inspect(db.engine)
 
-    # -----------------------------------------------------
-    # Safely add category column if an older database
-    # does not have it.
-    # -----------------------------------------------------
-
     if inspector.has_table("lesson"):
 
         columns = [
@@ -433,10 +446,6 @@ def create_tables_and_seed():
                     )
                 )
 
-    # -----------------------------------------------------
-    # Make sure homepage settings exist.
-    # -----------------------------------------------------
-
     homepage = HomepageSettings.query.first()
 
     if not homepage:
@@ -453,38 +462,28 @@ def create_tables_and_seed():
 
     # -----------------------------------------------------
     # ADMIN ACCOUNT
-    #
-    # Username: Kelay336
-    # Email: Mustaphtouray7@gmail.com
-    # Password: gambia2026
-    #
-    # Existing admin account is updated instead of creating
-    # unnecessary duplicate admin accounts.
     # -----------------------------------------------------
 
     admin_email = "Mustaphtouray7@gmail.com"
     admin_username = "Kelay336"
     admin_password = "gambia2026"
 
-    admin = User.query.filter_by(
-        email=admin_email
+    admin = User.query.filter(
+        func.lower(User.email) == admin_email.lower()
     ).first()
 
     if not admin:
 
-        # Look for an existing administrator.
         admin = User.query.filter_by(
             is_admin=True
         ).first()
 
     if admin:
 
-        # Update the existing admin account.
         admin.username = admin_username
         admin.email = admin_email
         admin.is_admin = True
 
-        # Keep the requested admin password.
         admin.password_hash = generate_password_hash(
             admin_password
         )
@@ -503,7 +502,6 @@ def create_tables_and_seed():
         db.session.add(admin)
 
     db.session.commit()
-
 
     if Lesson.query.count() == 0:
 
@@ -669,8 +667,8 @@ def register():
                 url_for("register")
             )
 
-        if User.query.filter_by(
-            email=email
+        if User.query.filter(
+            func.lower(User.email) == email
         ).first():
 
             flash(
@@ -740,8 +738,9 @@ def login():
         )
 
         user = User.query.filter(
-    func.lower(User.email) == email
-).first()
+            func.lower(User.email) == email
+        ).first()
+
         if not user or not user.check_password(password):
 
             flash(
@@ -779,6 +778,64 @@ def login():
 
 
 # ---------------------------------------------------------
+# ADMIN LOGIN
+# ---------------------------------------------------------
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+
+    if request.method == "POST":
+
+        email = request.form.get(
+            "email",
+            ""
+        ).strip().lower()
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        user = User.query.filter(
+            func.lower(User.email) == email
+        ).first()
+
+        if (
+            not user
+            or not user.is_admin
+            or not user.check_password(password)
+        ):
+
+            flash(
+                "بيانات المدير غير صحيحة",
+                "error"
+            )
+
+            return redirect(
+                url_for("admin_login")
+            )
+
+        session.clear()
+
+        session["user_id"] = user.id
+        session["username"] = user.username
+        session["is_admin"] = True
+
+        flash(
+            "تم تسجيل دخول المدير بنجاح",
+            "success"
+        )
+
+        return redirect(
+            url_for("admin_index")
+        )
+
+    return render_template(
+        "admin_login.html"
+    )
+
+
+# ---------------------------------------------------------
 # LOGOUT
 # ---------------------------------------------------------
 
@@ -806,8 +863,8 @@ def forgot_password():
             ""
         ).strip().lower()
 
-        user = User.query.filter_by(
-            email=email
+        user = User.query.filter(
+            func.lower(User.email) == email
         ).first()
 
         if not user:
@@ -884,8 +941,8 @@ def reset_password(token):
             url_for("forgot_password")
         )
 
-    user = User.query.filter_by(
-        email=email
+    user = User.query.filter(
+        func.lower(User.email) == email.lower()
     ).first_or_404()
 
     if request.method == "POST":
@@ -1297,15 +1354,6 @@ def admin_index():
 
     activity_count = Activity.query.count()
 
-    recent_lessons = (
-        Lesson.query
-        .order_by(Lesson.created_at.desc())
-        .limit(5)
-        .all()
-    )
-
-    homepage = HomepageSettings.query.first()
-
     return render_template(
         "admin.html",
         lessons=lessons,
@@ -1314,9 +1362,6 @@ def admin_index():
         students_count=students_count,
         lessons_count=lessons_count,
         activity_count=activity_count,
-        recent_lessons=recent_lessons,
-        homepage=homepage,
-        categories=CATEGORY_NAMES,
     )
 
 
@@ -1636,6 +1681,11 @@ def lesson_complete(lesson_id):
 # APPLICATION START
 # ---------------------------------------------------------
 
+
+def get_runtime_port():
+    return int(os.environ.get("PORT", 5000))
+
+
 if __name__ == "__main__":
 
     with app.app_context():
@@ -1643,11 +1693,6 @@ if __name__ == "__main__":
 
     app.run(
         host="0.0.0.0",
-        port=int(
-            os.environ.get(
-                "PORT",
-                10000
-            )
-        ),
+        port=get_runtime_port(),
         debug=False
     )
