@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>منصة علم الفرائض</title>
     <link href="/static/style.css" rel="stylesheet">
-    <style>body{font-family: Cairo, Arial, sans-serif}</style>
 </head>
 <body>
     <header>
@@ -22,7 +21,6 @@
             {% endif %}
         </nav>
     </header>
-
     <main>
         <section class="hero">
             <h1>مرحباً بك في منصة علم الفرائض</h1>
@@ -32,8 +30,16 @@
                 <button type="submit">بحث</button>
             </form>
         </section>
-
         <div class="container">
+            <div class="section-title"><h2>المواد</h2></div>
+            <div class="cards">
+                {% for key, name in categories.items() %}
+                <div class="card lessons-card center">
+                    <h3>{{ name }}</h3>
+                    <a class="btn" href="/category/{{ key }}">عرض الدروس</a>
+                </div>
+                {% endfor %}
+            </div>
             <div class="section-title"><h2>أحدث الدروس</h2></div>
             <div class="cards">
                 {% for l in lessons %}
@@ -42,11 +48,12 @@
                     <p>{{ l.description }}</p>
                     <a href="/lesson/{{ l.id }}">عرض الدرس</a>
                 </div>
+                {% else %}
+                <p>لا توجد دروس.</p>
                 {% endfor %}
             </div>
         </div>
     </main>
-
     <footer><p>منصة علم الفرائض</p></footer>
 </body>
 </html>
