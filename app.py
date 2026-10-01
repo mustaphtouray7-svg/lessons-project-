@@ -538,6 +538,7 @@ def category_lessons(category):
         total=len(lessons),
         category=category,
         category_name=CATEGORY_NAMES[category],
+        category_names=CATEGORY_NAMES,
     )
 
 
@@ -1173,6 +1174,7 @@ def lessons_list():
             category,
             ""
         ),
+        category_names=CATEGORY_NAMES,
     )
 
 
