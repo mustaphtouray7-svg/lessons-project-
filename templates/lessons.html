@@ -3,41 +3,70 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>جميع الدروس</title>
-    <link href="/static/style.css" rel="stylesheet">
-    <style>body{font-family:Cairo,Arial,sans-serif}</style>
+    <title>{% if category_name %}{{ category_name }} - {% endif %}الدروس</title>
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
 </head>
 <body>
+    {% include "_header.html" %}
     <main class="container">
-        <h2>الدروس</h2>
-        <form method="get" action="/lessons" class="search-box">
-            <input name="q" placeholder="ابحث عن درس..." value="{{ search_query or '' }}">
-            <button type="submit">بحث</button>
-        </form>
+        <div class="section-heading">
+            <div>
+                <h1 class="page-heading">{% if category_name %}{{ category_name }}{% else %}الدروس{% endif %}</h1>
+                <p class="page-lead">ابحث في الدروس واختر ما تريد تعلمه.</p>
+            </div>
+        </div>
+
+        <section class="search-panel" aria-label="البحث في الدروس">
+            <form method="get" action="/lessons" class="search-box">
+                <div class="search-field">
+                    <label for="lesson-search">ابحث عن درس</label>
+                    <input id="lesson-search" name="q" type="search" placeholder="اكتب عنوان الدرس أو كلمة..." value="{{ search_query or '' }}">
+                </div>
+                {% if categories %}
+                <div class="search-field">
+                    <label for="lesson-category">التصنيف</label>
+                    <select id="lesson-category" name="category">
+                        <option value="">جميع التصنيفات</option>
+                        {% for key, name in categories.items() %}
+                        <option value="{{ key }}" {% if category == key %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <button type="submit">بحث</button>
+            </form>
+        </section>
 
         <div class="cards">
-            {% for l in lessons %}
-            <div class="card lessons-card">
-                <h4>{{ l.title }}</h4>
-                <p>{{ l.description }}</p>
-                <a href="/lesson/{{ l.id }}">عرض الدرس</a>
-            </div>
+            {% for lesson in lessons %}
+            <article class="card lesson-card">
+                <h2>{{ lesson.title }}</h2>
+                <p>{{ lesson.description or 'لا يوجد وصف لهذا الدرس.' }}</p>
+                <div class="card-meta">
+                    <span class="tag">{{ categories.get(lesson.category, lesson.category) if categories else lesson.category }}</span>
+                    {% if lesson.video_url %}<span class="tag">فيديو</span>{% endif %}
+                    {% if lesson.content %}<span class="tag">محتوى مكتوب</span>{% endif %}
+                </div>
+                <a class="btn" href="/lesson/{{ lesson.id }}">عرض الدرس</a>
+            </article>
             {% else %}
-            <p>لا توجد دروس.</p>
+            <div class="empty-state">
+                {% if search_query %}لم نعثر على دروس تطابق بحثك.{% else %}لا توجد دروس للعرض حالياً.{% endif %}
+            </div>
             {% endfor %}
         </div>
 
         {% if total > per_page %}
-        <div style="margin-top:18px;text-align:center">
-            {% set last_page = (total // per_page) + (1 if total % per_page else 0) %}
+        {% set last_page = (total // per_page) + (1 if total % per_page else 0) %}
+        <nav class="pagination" aria-label="صفحات الدروس">
             {% if page > 1 %}
-                <a class="btn" href="?q={{ search_query }}&page={{ page-1 }}">الصفحة السابقة</a>
+            <a class="btn btn-secondary" href="{{ url_for('lessons_list', q=search_query, category=category, page=page-1) }}">الصفحة السابقة</a>
             {% endif %}
             <span class="muted">صفحة {{ page }} من {{ last_page }}</span>
             {% if page < last_page %}
-                <a class="btn" href="?q={{ search_query }}&page={{ page+1 }}">الصفحة التالية</a>
+            <a class="btn btn-secondary" href="{{ url_for('lessons_list', q=search_query, category=category, page=page+1) }}">الصفحة التالية</a>
             {% endif %}
-        </div>
+        </nav>
         {% endif %}
     </main>
 </body>

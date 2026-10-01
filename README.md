@@ -27,7 +27,29 @@ Notes about Python on Windows:
 - If `python` is not found, install Python from https://www.python.org/downloads/windows/ and check "Add Python to PATH".
 - Alternatively, find the full path to `python.exe` and use it instead of `python` in the commands above.
 
+If an existing virtual environment raises `MemoryError` while importing
+SQLAlchemy, leave that environment and all project data untouched and create
+a separate clean Python 3.12 environment:
+
+```powershell
+py -3.12 -m venv .venv-repaired
+.\.venv-repaired\Scripts\python.exe -m pip install --upgrade pip
+.\.venv-repaired\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv-repaired\Scripts\python.exe app.py
+```
+
 Default seeded admin account: email `admin@local` password `admin123` (change after first login).
+
+---
+
+## Render PostgreSQL
+
+Set the Render service's `DATABASE_URL` environment variable to its PostgreSQL
+connection URL. The app also accepts `DATABASE_CONNECTION_STRING` and converts
+Render's `postgres://`/`postgresql://` schemes for the installed psycopg 3
+driver. Keep database credentials in Render's environment settings, never in
+source code. When neither variable is set, local SQLite remains the default;
+the app does not automatically migrate or copy SQLite records into PostgreSQL.
 
 ---
 

@@ -15,69 +15,95 @@ from urllib.parse import parse_qs, urlsplit, urlunsplit
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+def normalize_database_url(database_url):
+    if database_url:
+        if database_url.startswith("postgres://"):
+            return database_url.replace(
+                "postgres://",
+                "postgresql+psycopg://",
+                1,
+            )
+        if database_url.startswith("postgresql://"):
+            return database_url.replace(
+                "postgresql://",
+                "postgresql+psycopg://",
+                1,
+            )
+
+    return database_url
+
+
+DATABASE_URL = normalize_database_url(
+    os.environ.get("DATABASE_URL")
+    or os.environ.get("DATABASE_CONNECTION_STRING")
+)
+
 LEGACY_DATABASE_PATH = os.path.abspath(
     os.path.join(BASE_DIR, "lessons.db")
 )
-DATABASE_PATH_CONFIGURED = bool(os.environ.get("DATABASE_PATH"))
+DATABASE_PATH_CONFIGURED = bool(
+    os.environ.get("DATABASE_PATH") and not DATABASE_URL
+)
 DATABASE_PATH = os.path.abspath(
     os.environ.get("DATABASE_PATH") or LEGACY_DATABASE_PATH
 )
 
-os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+if not DATABASE_URL:
+    os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
 
-if (
-    DATABASE_PATH != LEGACY_DATABASE_PATH
-    and not os.path.exists(DATABASE_PATH)
-    and os.path.isfile(LEGACY_DATABASE_PATH)
-):
-    temporary_database_fd, temporary_database_path = tempfile.mkstemp(
-        dir=os.path.dirname(DATABASE_PATH),
-        prefix=".lessons-db-",
-    )
-    os.close(temporary_database_fd)
-    try:
-        source_database = sqlite3.connect(
-            LEGACY_DATABASE_PATH,
-            timeout=30,
+    if (
+        DATABASE_PATH != LEGACY_DATABASE_PATH
+        and not os.path.exists(DATABASE_PATH)
+        and os.path.isfile(LEGACY_DATABASE_PATH)
+    ):
+        temporary_database_fd, temporary_database_path = tempfile.mkstemp(
+            dir=os.path.dirname(DATABASE_PATH),
+            prefix=".lessons-db-",
         )
-        destination_database = sqlite3.connect(
-            temporary_database_path,
-            timeout=30,
-        )
+        os.close(temporary_database_fd)
         try:
-            source_database.backup(destination_database)
-        finally:
-            destination_database.close()
-            source_database.close()
-
-        try:
-            os.link(temporary_database_path, DATABASE_PATH)
-        except FileExistsError:
-            pass
-    finally:
-        os.unlink(temporary_database_path)
-
-if DATABASE_PATH_CONFIGURED and not os.path.isfile(DATABASE_PATH):
-    raise RuntimeError(
-        f"Configured database {DATABASE_PATH!r} does not exist. "
-        "Restore the existing database to this path before starting the app."
-    )
-
-if DATABASE_PATH_CONFIGURED:
-    with sqlite3.connect(DATABASE_PATH, timeout=30) as database:
-        tables = {
-            row[0]
-            for row in database.execute(
-                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            source_database = sqlite3.connect(
+                LEGACY_DATABASE_PATH,
+                timeout=30,
             )
-        }
+            destination_database = sqlite3.connect(
+                temporary_database_path,
+                timeout=30,
+            )
+            try:
+                source_database.backup(destination_database)
+            finally:
+                destination_database.close()
+                source_database.close()
 
-    if not {"lesson", "user"}.issubset(tables):
+            try:
+                os.link(temporary_database_path, DATABASE_PATH)
+            except FileExistsError:
+                pass
+        finally:
+            os.unlink(temporary_database_path)
+
+    if DATABASE_PATH_CONFIGURED and not os.path.isfile(DATABASE_PATH):
         raise RuntimeError(
-            f"Configured database {DATABASE_PATH!r} is missing the existing "
-            "lesson or user table. Restore the existing database before "
-            "starting the app."
+            f"Configured database {DATABASE_PATH!r} does not exist. "
+            "Restore the existing database to this path before starting the app."
         )
+
+    if DATABASE_PATH_CONFIGURED:
+        with sqlite3.connect(DATABASE_PATH, timeout=30) as database:
+            tables = {
+                row[0]
+                for row in database.execute(
+                    "SELECT name FROM sqlite_master WHERE type = 'table'"
+                )
+            }
+
+        if not {"lesson", "user"}.issubset(tables):
+            raise RuntimeError(
+                f"Configured database {DATABASE_PATH!r} is missing the existing "
+                "lesson or user table. Restore the existing database before "
+                "starting the app."
+            )
 
 
 app = flask.Flask(
@@ -91,9 +117,12 @@ app.config["SECRET_KEY"] = os.environ.get(
     "dev-secret-please-change"
 )
 
-app.config["SQLALCHEMY_DATABASE_URI"] = URL.create(
-    "sqlite",
-    database=DATABASE_PATH,
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    DATABASE_URL
+    or URL.create(
+        "sqlite",
+        database=DATABASE_PATH,
+    )
 )
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -615,6 +644,7 @@ def category_lessons(category):
         total=len(lessons),
         category=category,
         category_name=CATEGORY_NAMES[category],
+        categories=CATEGORY_NAMES,
     )
 
 
@@ -1118,6 +1148,7 @@ def dashboard():
         page=page,
         per_page=per_page,
         total=total,
+        categories=CATEGORY_NAMES,
     )
 
 
@@ -1191,6 +1222,7 @@ def lessons_list():
             category,
             ""
         ),
+        categories=CATEGORY_NAMES,
     )
 
 
@@ -1257,6 +1289,7 @@ def lesson_detail(lesson_id):
         lesson=lesson,
         video_embed_url=video_embed_url,
         video_open_url=video_open_url,
+        categories=CATEGORY_NAMES,
         prev_lesson=previous_lesson,
         next_lesson=next_lesson,
     )

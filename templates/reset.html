@@ -4,30 +4,25 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>إعادة تعيين كلمة المرور</title>
-    <link href="/static/style.css" rel="stylesheet">
-    <style>body{font-family:Cairo,Arial,sans-serif}</style>
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
 </head>
 <body>
-    <main class="container">
-        <h2>إعادة تعيين كلمة المرور</h2>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for cat, msg in messages %}
-              <div class="flash {{ cat }}">{{ msg }}</div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
-
-        <form method="post" action="/reset/{{ token }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <label>كلمة المرور الجديدة</label>
-            <input name="password" type="password" required>
-            <label>تأكيد كلمة المرور</label>
-            <input name="confirm" type="password" required>
-            <button type="submit">تعيين كلمة المرور</button>
-        </form>
-
-        <p><a href="/login">العودة لتسجيل الدخول</a></p>
+    {% include "_header.html" %}
+    <main class="container page-shell--narrow">
+        <section class="form-card">
+            <h1 class="page-heading">إعادة تعيين كلمة المرور</h1>
+            <p class="page-lead">اختر كلمة مرور جديدة لحسابك.</p>
+            {% include "_flash_messages.html" %}
+            <form method="post" action="/reset/{{ token }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="password">كلمة المرور الجديدة</label>
+                <input id="password" name="password" type="password" autocomplete="new-password" required>
+                <label for="confirm">تأكيد كلمة المرور</label>
+                <input id="confirm" name="confirm" type="password" autocomplete="new-password" required>
+                <button type="submit">تعيين كلمة المرور</button>
+            </form>
+            <p><a href="/login">العودة لتسجيل الدخول</a></p>
+        </section>
     </main>
 </body>
 </html>

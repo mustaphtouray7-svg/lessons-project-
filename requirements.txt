@@ -1,6 +1,7 @@
 Flask
 Flask-WTF
 Flask-SQLAlchemy
+psycopg[binary]
 itsdangerous
 WTForms
 pytest

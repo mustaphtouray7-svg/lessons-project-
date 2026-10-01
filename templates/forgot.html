@@ -4,34 +4,29 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>استعادة كلمة المرور</title>
-    <link href="/static/style.css" rel="stylesheet">
-    <style>body{font-family:Cairo,Arial,sans-serif}</style>
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
 </head>
 <body>
-    <main class="container">
-        <h2>استعادة كلمة المرور</h2>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for cat, msg in messages %}
-              <div class="flash {{ cat }}">{{ msg }}</div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
-
-        {% if show_token %}
+    {% include "_header.html" %}
+    <main class="container page-shell--narrow">
+        <section class="form-card">
+            <h1 class="page-heading">استعادة كلمة المرور</h1>
+            <p class="page-lead">أدخل بريدك الإلكتروني لبدء إعادة التعيين.</p>
+            {% include "_flash_messages.html" %}
+            {% if show_token %}
             <p>رابط إعادة التعيين (للتطوير فقط):</p>
-            <div class="card"> <a href="{{ reset_link }}">{{ reset_link }}</a> </div>
+            <div class="card"><a href="{{ reset_link }}">{{ reset_link }}</a></div>
             <p>انسخ الرابط والصقه في المتصفح لاختبار إعادة التعيين.</p>
-        {% else %}
+            {% else %}
             <form method="post" action="/forgot">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <label>البريد الإلكتروني</label>
-                <input name="email" type="email" required>
+                <label for="email">البريد الإلكتروني</label>
+                <input id="email" name="email" type="email" autocomplete="email" required>
                 <button type="submit">إرسال رابط إعادة التعيين</button>
             </form>
-        {% endif %}
-
-        <p><a href="/login">العودة لتسجيل الدخول</a></p>
+            {% endif %}
+            <p><a href="/login">العودة لتسجيل الدخول</a></p>
+        </section>
     </main>
 </body>
 </html>

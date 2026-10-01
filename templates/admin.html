@@ -3,105 +3,151 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>لوحة المشرف</title>
-    <link href="/static/style.css" rel="stylesheet">
-    <style>body{font-family:Cairo,Arial,sans-serif}</style>
+    <title>لوحة الإدارة</title>
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
 </head>
 <body>
+    {% include "_header.html" %}
     <main class="container">
-        <h2>لوحة المشرف</h2>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for cat, msg in messages %}
-              <div class="flash {{ cat }}">{{ msg }}</div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+        {% include "_flash_messages.html" %}
+        <div class="section-heading">
+            <div>
+                <h1 class="page-heading">لوحة الإدارة</h1>
+                <p class="page-lead">إدارة الدروس والمستخدمين وإعدادات الصفحة الرئيسية.</p>
+            </div>
+        </div>
 
-        <section>
-            <h3>إحصائيات</h3>
-            <div class="cards" style="grid-template-columns:repeat(3,1fr);">
-                <div class="card center">
-                    <h4>المستخدمون</h4>
-                    <p>{{ students_count }}</p>
+        <section class="cards stats-grid" aria-label="إحصائيات المنصة">
+            <article class="card stat-card"><h2>الطلاب</h2><p>{{ students_count }}</p></article>
+            <article class="card stat-card"><h2>الدروس</h2><p>{{ lessons_count }}</p></article>
+            <article class="card stat-card"><h2>النشاطات</h2><p>{{ activity_count }}</p></article>
+        </section>
+
+        <section class="section admin-section">
+            <div class="section-heading">
+                <div>
+                    <h2>إعدادات الصفحة الرئيسية</h2>
+                    <p>حدّث العنوان والوصف والزر الظاهر للزوار.</p>
                 </div>
-                <div class="card center">
-                    <h4>الدروس</h4>
-                    <p>{{ lessons_count }}</p>
-                </div>
-                <div class="card center">
-                    <h4>النشاطات</h4>
-                    <p>{{ activity_count }}</p>
-                </div>
+            </div>
+            <div class="card">
+                <form method="post" action="/admin/homepage">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label for="homepage-title">العنوان</label>
+                    <input id="homepage-title" name="title" value="{{ homepage.title }}" required>
+                    <label for="homepage-description">الوصف</label>
+                    <textarea id="homepage-description" name="description">{{ homepage.description or '' }}</textarea>
+                    <label for="homepage-image">رابط الصورة (اختياري)</label>
+                    <input id="homepage-image" name="image_url" type="url" value="{{ homepage.image_url or '' }}">
+                    <label for="homepage-button">نص الزر</label>
+                    <input id="homepage-button" name="button_text" value="{{ homepage.button_text }}" required>
+                    <button type="submit">حفظ إعدادات الصفحة</button>
+                </form>
             </div>
         </section>
 
-        <section>
-            <h3>إضافة درس جديد</h3>
-            <form method="post" action="/admin/add">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <label>عنوان الدرس</label>
-                <input name="title" required>
-                <label>وصف</label>
-                <textarea name="description"></textarea>
-                <label>محتوى الدرس (النص العربي)</label>
-                <textarea name="content"></textarea>
-                <label>رابط الفيديو (iframe أو embed)</label>
-                <input name="video_url">
-                <button type="submit">إضافة</button>
-            </form>
+        <section class="section admin-section">
+            <div class="section-heading">
+                <div>
+                    <h2>إضافة درس جديد</h2>
+                    <p>أضف محتوى الدرس ورابط الفيديو عند توفره.</p>
+                </div>
+            </div>
+            <div class="card">
+                <form method="post" action="/admin/add">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label for="new-title">عنوان الدرس</label>
+                    <input id="new-title" name="title" required>
+                    <label for="new-description">الوصف</label>
+                    <textarea id="new-description" name="description"></textarea>
+                    <label for="new-content">محتوى الدرس</label>
+                    <textarea id="new-content" name="content"></textarea>
+                    <label for="new-category">التصنيف</label>
+                    <select id="new-category" name="category">
+                        {% for key, name in categories.items() %}
+                        <option value="{{ key }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="new-video">رابط الفيديو (HTTP أو HTTPS)</label>
+                    <input id="new-video" name="video_url" type="url" placeholder="الصق رابط الفيديو">
+                    <button type="submit">إضافة الدرس</button>
+                </form>
+            </div>
         </section>
 
-        <section>
-            <h3>الدروس</h3>
-            <ul>
-                {% for l in lessons %}
-                <li>
-                    <strong>{{ l.title }}</strong> - {{ l.created_at.strftime('%Y-%m-%d') }}
-
-                    <details>
-                        <summary>تعديل الدرس</summary>
-                        <form method="post" action="/admin/edit/{{ l.id }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <label>عنوان الدرس</label>
-                            <input name="title" value="{{ l.title }}" required>
-                            <label>وصف</label>
-                            <textarea name="description">{{ l.description }}</textarea>
-                            <label>محتوى الدرس</label>
-                            <textarea name="content">{{ l.content or '' }}</textarea>
-                            <label>رابط الفيديو (iframe أو embed)</label>
-                            <input name="video_url" value="{{ l.video_url }}">
-                            <button type="submit">حفظ التغييرات</button>
-                        </form>
-                    </details>
-
-                    <form method="post" action="/admin/delete/{{ l.id }}" style="display:inline">
+        <section class="section admin-section">
+            <div class="section-heading">
+                <div>
+                    <h2>إدارة الدروس</h2>
+                    <p>عدّل بيانات الدرس أو احذفه عند الحاجة.</p>
+                </div>
+            </div>
+            {% for lesson in lessons %}
+            <article class="card admin-lesson">
+                <details>
+                    <summary>
+                        <span>{{ lesson.title }}</span>
+                        <span class="muted">{{ lesson.created_at.strftime('%Y-%m-%d') }}</span>
+                    </summary>
+                    <form method="post" action="/admin/edit/{{ lesson.id }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" onclick="return confirm('هل أنت متأكد من حذف هذا الدرس؟')">حذف</button>
+                        <label for="lesson-title-{{ lesson.id }}">عنوان الدرس</label>
+                        <input id="lesson-title-{{ lesson.id }}" name="title" value="{{ lesson.title }}" required>
+                        <label for="lesson-description-{{ lesson.id }}">الوصف</label>
+                        <textarea id="lesson-description-{{ lesson.id }}" name="description">{{ lesson.description or '' }}</textarea>
+                        <label for="lesson-content-{{ lesson.id }}">محتوى الدرس</label>
+                        <textarea id="lesson-content-{{ lesson.id }}" name="content">{{ lesson.content or '' }}</textarea>
+                        <label for="lesson-category-{{ lesson.id }}">التصنيف</label>
+                        <select id="lesson-category-{{ lesson.id }}" name="category">
+                            {% for key, name in categories.items() %}
+                            <option value="{{ key }}" {% if lesson.category == key %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="lesson-video-{{ lesson.id }}">رابط الفيديو (HTTP أو HTTPS)</label>
+                        <input id="lesson-video-{{ lesson.id }}" name="video_url" type="url" value="{{ lesson.video_url or '' }}">
+                        <button type="submit">حفظ التغييرات</button>
                     </form>
-                </li>
-                {% endfor %}
-            </ul>
+                </details>
+                <div class="admin-lesson-actions">
+                    <a class="btn btn-secondary" href="/lesson/{{ lesson.id }}">معاينة الدرس</a>
+                    <form method="post" action="/admin/delete/{{ lesson.id }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn-danger" type="submit" onclick="return confirm('هل أنت متأكد من حذف هذا الدرس؟')">حذف الدرس</button>
+                    </form>
+                </div>
+            </article>
+            {% else %}
+            <div class="empty-state">لا توجد دروس حالياً.</div>
+            {% endfor %}
         </section>
 
-        <section>
-            <h3>المستخدمون المسجلون</h3>
-            <ul class="admin-list">
-                {% for u in users %}
-                <li>{{ u.username }} - {{ u.email }} - {{ u.created_at.strftime('%Y-%m-%d') }}</li>
-                {% else %}
-                <li>لا يوجد مستخدمون.</li>
-                {% endfor %}
-            </ul>
+        <section class="section admin-section">
+            <div class="section-heading"><h2>المستخدمون المسجلون</h2></div>
+            <div class="card">
+                <ul class="admin-list">
+                    {% for user in users %}
+                    <li><strong>{{ user.username }}</strong><span>{{ user.email }}</span><time class="muted">{{ user.created_at.strftime('%Y-%m-%d') }}</time></li>
+                    {% else %}
+                    <li>لا يوجد مستخدمون.</li>
+                    {% endfor %}
+                </ul>
+            </div>
         </section>
 
-        <section>
-            <h3>آخر النشاطات</h3>
-            <ul>
-                {% for a in activities %}
-                <li>{{ a.timestamp.strftime('%Y-%m-%d %H:%M') }} - المستخدم: {{ a.user_id }} - {{ a.action }}</li>
-                {% endfor %}
-            </ul>
+        <section class="section admin-section">
+            <div class="section-heading"><h2>آخر النشاطات</h2></div>
+            <div class="card">
+                <ul class="activity-list">
+                    {% for activity in activities %}
+                    <li>
+                        <span>المستخدم {{ activity.user_id }} · {{ activity.action }}</span>
+                        <time class="muted">{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</time>
+                    </li>
+                    {% else %}
+                    <li class="muted">لا توجد نشاطات بعد.</li>
+                    {% endfor %}
+                </ul>
+            </div>
         </section>
     </main>
 </body>

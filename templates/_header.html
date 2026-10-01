@@ -1,0 +1,20 @@
+<header class="site-header">
+    <a class="brand" href="/" aria-label="منصة علم الفرائض - الرئيسية">
+        <span class="brand-mark" aria-hidden="true">ف</span>
+        <span>منصة علم الفرائض</span>
+    </a>
+    <nav class="site-nav" aria-label="التنقل الرئيسي">
+        <a href="/">الرئيسية</a>
+        <a href="/lessons">الدروس</a>
+        <a href="/login">تسجيل الدخول</a>
+        {% if session.user_id %}
+        <a href="/profile">حساب</a>
+        {% if session.is_admin %}
+        <a href="/admin">الإدارة</a>
+        {% endif %}
+        <a class="nav-logout" href="/logout">تسجيل الخروج</a>
+        {% else %}
+        <a href="/register">حساب</a>
+        {% endif %}
+    </nav>
+</header>
