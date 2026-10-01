@@ -1,10 +1,12 @@
 import flask
 from flask import request, session, redirect, url_for, render_template, flash, abort
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import inspect, text, func
+from sqlalchemy import inspect, text, func, URL
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
+import sqlite3
+import tempfile
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from flask_wtf import CSRFProtect
 from flask_wtf.csrf import generate_csrf
@@ -13,6 +15,69 @@ from urllib.parse import parse_qs, urlsplit, urlunsplit
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LEGACY_DATABASE_PATH = os.path.abspath(
+    os.path.join(BASE_DIR, "lessons.db")
+)
+DATABASE_PATH_CONFIGURED = bool(os.environ.get("DATABASE_PATH"))
+DATABASE_PATH = os.path.abspath(
+    os.environ.get("DATABASE_PATH") or LEGACY_DATABASE_PATH
+)
+
+os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+
+if (
+    DATABASE_PATH != LEGACY_DATABASE_PATH
+    and not os.path.exists(DATABASE_PATH)
+    and os.path.isfile(LEGACY_DATABASE_PATH)
+):
+    temporary_database_fd, temporary_database_path = tempfile.mkstemp(
+        dir=os.path.dirname(DATABASE_PATH),
+        prefix=".lessons-db-",
+    )
+    os.close(temporary_database_fd)
+    try:
+        source_database = sqlite3.connect(
+            LEGACY_DATABASE_PATH,
+            timeout=30,
+        )
+        destination_database = sqlite3.connect(
+            temporary_database_path,
+            timeout=30,
+        )
+        try:
+            source_database.backup(destination_database)
+        finally:
+            destination_database.close()
+            source_database.close()
+
+        try:
+            os.link(temporary_database_path, DATABASE_PATH)
+        except FileExistsError:
+            pass
+    finally:
+        os.unlink(temporary_database_path)
+
+if DATABASE_PATH_CONFIGURED and not os.path.isfile(DATABASE_PATH):
+    raise RuntimeError(
+        f"Configured database {DATABASE_PATH!r} does not exist. "
+        "Restore the existing database to this path before starting the app."
+    )
+
+if DATABASE_PATH_CONFIGURED:
+    with sqlite3.connect(DATABASE_PATH, timeout=30) as database:
+        tables = {
+            row[0]
+            for row in database.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+
+    if not {"lesson", "user"}.issubset(tables):
+        raise RuntimeError(
+            f"Configured database {DATABASE_PATH!r} is missing the existing "
+            "lesson or user table. Restore the existing database before "
+            "starting the app."
+        )
 
 
 app = flask.Flask(
@@ -26,8 +91,9 @@ app.config["SECRET_KEY"] = os.environ.get(
     "dev-secret-please-change"
 )
 
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    f"sqlite:///{os.path.join(BASE_DIR, 'lessons.db')}"
+app.config["SQLALCHEMY_DATABASE_URI"] = URL.create(
+    "sqlite",
+    database=DATABASE_PATH,
 )
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
