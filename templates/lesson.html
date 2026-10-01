@@ -17,12 +17,15 @@
             <div style="margin-top:8px;line-height:1.8">{{ lesson.content }}</div>
         </div>
         {% endif %}
-        {% if lesson.video_url %}
+        {% if video_embed_url %}
             <div class="video">
-                <iframe width="100%" height="400" src="{{ lesson.video_url }}" title="video" frameborder="0" allowfullscreen></iframe>
+                <iframe width="100%" height="400" src="{{ video_embed_url }}" title="video" frameborder="0" allowfullscreen></iframe>
             </div>
         {% endif %}
         <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+            {% if video_open_url %}
+            <a class="btn" href="{{ video_open_url }}" target="_blank" rel="noopener noreferrer">فتح الرابط</a>
+            {% endif %}
             {% if prev_lesson %}
             <a class="btn" href="/lesson/{{ prev_lesson.id }}">الدرس السابق</a>
             {% endif %}
