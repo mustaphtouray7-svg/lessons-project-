@@ -11,7 +11,6 @@ from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from flask_wtf import CSRFProtect
 from flask_wtf.csrf import generate_csrf
 from functools import wraps
-from urllib.parse import parse_qs, urlsplit, urlunsplit
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -351,78 +350,6 @@ def normalize_category(category):
     return category
 
 
-def prepare_video_urls(video_url):
-
-    candidate = video_url.strip()
-
-    if not candidate:
-        return None, None
-
-    try:
-        parsed = urlsplit(candidate)
-        hostname = parsed.hostname
-    except ValueError:
-        return None, None
-
-    if (
-        parsed.scheme.lower() not in {"http", "https"}
-        or not parsed.netloc
-        or not hostname
-    ):
-        return None, None
-
-    hostname = hostname.lower().rstrip(".")
-    path_parts = [part for part in parsed.path.split("/") if part]
-    video_id = None
-    embed_host = "www.youtube.com"
-    already_embedded = False
-
-    def valid_video_id(value):
-        return (
-            bool(value)
-            and len(value) <= 128
-            and all(
-                character in
-                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
-                for character in value
-            )
-        )
-
-    if hostname == "youtu.be" and len(path_parts) == 1:
-        video_id = path_parts[0]
-    elif hostname in {"youtube.com", "www.youtube.com", "m.youtube.com"}:
-        if path_parts == ["watch"]:
-            video_id = parse_qs(parsed.query).get("v", [None])[0]
-        elif len(path_parts) == 2 and path_parts[0] == "shorts":
-            video_id = path_parts[1]
-        elif len(path_parts) == 2 and path_parts[0] == "embed":
-            video_id = path_parts[1]
-            already_embedded = True
-    elif hostname in {"youtube-nocookie.com", "www.youtube-nocookie.com"}:
-        if len(path_parts) == 2 and path_parts[0] == "embed":
-            video_id = path_parts[1]
-            embed_host = "www.youtube-nocookie.com"
-            already_embedded = True
-
-    if valid_video_id(video_id):
-        if already_embedded:
-            iframe_url = urlunsplit(
-                (
-                    "https",
-                    embed_host,
-                    f"/embed/{video_id}",
-                    parsed.query,
-                    parsed.fragment,
-                )
-            )
-        else:
-            iframe_url = f"https://www.youtube.com/embed/{video_id}"
-    else:
-        iframe_url = candidate
-
-    return iframe_url, video_url
-
-
 # ---------------------------------------------------------
 # DATABASE SETUP AND SAFE MIGRATION
 # ---------------------------------------------------------
@@ -470,44 +397,36 @@ def create_tables_and_seed():
     # ADMIN ACCOUNT
     # -----------------------------------------------------
 
-    admin_email = "Mustaphtouray7@gmail.com"
-    admin_username = "Kelay336"
-    admin_password = "gambia2026"
+    # Keep the existing administrator unchanged in production.
+    # A new administrator is created only when explicit environment
+    # variables are provided, so startup never overwrites database data.
+    admin_email = os.environ.get("ADMIN_EMAIL", "").strip().lower()
+    admin_username = os.environ.get("ADMIN_USERNAME", "").strip()
+    admin_password = os.environ.get("ADMIN_PASSWORD", "")
 
-    admin = User.query.filter(
-        func.lower(User.email) == admin_email.lower()
-    ).first()
-
-    if not admin:
-
-        admin = User.query.filter_by(
-            is_admin=True
+    if admin_email and admin_username and admin_password:
+        admin = User.query.filter(
+            func.lower(User.email) == admin_email
         ).first()
 
-    if admin:
+        if not admin:
+            admin = User.query.filter_by(is_admin=True).first()
 
-        admin.username = admin_username
-        admin.email = admin_email
-        admin.is_admin = True
+        if admin:
+            admin.username = admin_username
+            admin.email = admin_email
+            admin.is_admin = True
+            admin.password_hash = generate_password_hash(admin_password)
+        else:
+            admin = User(
+                username=admin_username,
+                email=admin_email,
+                password_hash=generate_password_hash(admin_password),
+                is_admin=True,
+            )
+            db.session.add(admin)
 
-        admin.password_hash = generate_password_hash(
-            admin_password
-        )
-
-    else:
-
-        admin = User(
-            username=admin_username,
-            email=admin_email,
-            password_hash=generate_password_hash(
-                admin_password
-            ),
-            is_admin=True,
-        )
-
-        db.session.add(admin)
-
-    db.session.commit()
+        db.session.commit()
 
     if Lesson.query.count() == 0:
 
@@ -1274,10 +1193,6 @@ def lesson_detail(lesson_id):
     if not lesson:
         abort(404)
 
-    video_embed_url, video_open_url = prepare_video_urls(
-        lesson.video_url or ""
-    )
-
     uid = session.get(
         "user_id"
     )
@@ -1318,8 +1233,6 @@ def lesson_detail(lesson_id):
     return render_template(
         "lesson.html",
         lesson=lesson,
-        video_embed_url=video_embed_url,
-        video_open_url=video_open_url,
         prev_lesson=previous_lesson,
         next_lesson=next_lesson,
     )
@@ -1420,17 +1333,6 @@ def admin_add_lesson():
             url_for("admin_index")
         )
 
-    if video_url.strip() and not prepare_video_urls(video_url)[1]:
-
-        flash(
-            "يرجى إدخال رابط فيديو يبدأ بـ HTTP أو HTTPS",
-            "error"
-        )
-
-        return redirect(
-            url_for("admin_index")
-        )
-
     lesson = Lesson(
         title=title,
         description=description,
@@ -1502,17 +1404,6 @@ def admin_edit_lesson(lesson_id):
 
         flash(
             "الرجاء إدخال عنوان الدرس",
-            "error"
-        )
-
-        return redirect(
-            url_for("admin_index")
-        )
-
-    if video_url.strip() and not prepare_video_urls(video_url)[1]:
-
-        flash(
-            "يرجى إدخال رابط فيديو يبدأ بـ HTTP أو HTTPS",
             "error"
         )
 
