@@ -404,20 +404,25 @@ def create_tables_and_seed():
     admin_username = os.environ.get("ADMIN_USERNAME", "").strip()
     admin_password = os.environ.get("ADMIN_PASSWORD", "")
 
-    if admin_email and admin_username and admin_password:
-        admin = User.query.filter(
-            func.lower(User.email) == admin_email
-        ).first()
+    if admin_password:
+        admin = None
+
+        if admin_email:
+            admin = User.query.filter(
+                func.lower(User.email) == admin_email
+            ).first()
 
         if not admin:
             admin = User.query.filter_by(is_admin=True).first()
 
         if admin:
-            admin.username = admin_username
-            admin.email = admin_email
+            if admin_email and admin_username:
+                admin.username = admin_username
+                admin.email = admin_email
             admin.is_admin = True
             admin.password_hash = generate_password_hash(admin_password)
-        else:
+            db.session.commit()
+        elif admin_email and admin_username:
             admin = User(
                 username=admin_username,
                 email=admin_email,
@@ -425,8 +430,7 @@ def create_tables_and_seed():
                 is_admin=True,
             )
             db.session.add(admin)
-
-        db.session.commit()
+            db.session.commit()
 
     if Lesson.query.count() == 0:
 
