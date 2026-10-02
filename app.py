@@ -1295,9 +1295,15 @@ def lesson_detail(lesson_id):
         .first()
     )
 
+    # Convert common pasted video links (including normal YouTube share
+    # links) only when displaying them. The original URL stays unchanged in
+    # the database, so the admin can paste a link exactly as copied.
+    display_video_url = normalize_video_url(lesson.video_url)
+
     return render_template(
         "lesson.html",
         lesson=lesson,
+        display_video_url=display_video_url,
         prev_lesson=previous_lesson,
         next_lesson=next_lesson,
     )
