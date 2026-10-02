@@ -11,7 +11,7 @@
         <div class="logo">منصة علم الفرائض</div>
         <nav>
             <a href="/">الرئيسية</a>
-            <a href="/subjects">المواد</a>
+            <a href="/lessons">الدروس</a>
             {% if session.username %}
             <a href="/dashboard">لوحة الطالب</a>
             <a href="/logout">تسجيل الخروج</a>
@@ -26,21 +26,25 @@
         <section class="hero">
             <h1>{{ homepage.title }}</h1>
             <p>{{ homepage.description }}</p>
-            <a class="btn" href="/subjects">{{ homepage.button_text }}</a>
+            <a class="btn" href="/lessons">{{ homepage.button_text }}</a>
         </section>
 
         <div class="container">
             <div class="section-title">
-                <h2>المواد</h2>
-                <p>اختر المادة للانتقال إلى دروسها</p>
+                <h2>الدروس</h2>
+                <p>اختر درسًا للبدء في التعلم</p>
             </div>
 
             <div class="cards">
-                <div class="card lessons-card center">
-                    <h3>المواد</h3>
-                    <p>الفرائض والنحو والفقه</p>
-                    <a class="btn" href="/subjects">اختيار المادة</a>
+                {% for l in lessons %}
+                <div class="card lessons-card">
+                    <h3>{{ l.title }}</h3>
+                    <p>{{ l.description }}</p>
+                    <a href="/lesson/{{ l.id }}">عرض الدرس</a>
                 </div>
+                {% else %}
+                <p>لا توجد دروس.</p>
+                {% endfor %}
             </div>
         </div>
     </main>
