@@ -33,7 +33,7 @@
                 </select>
                 <label>وصف</label><textarea name="description"></textarea>
                 <label>محتوى الدرس (النص العربي)</label><textarea name="content"></textarea>
-                <label>رابط الفيديو</label><input name="video_url" type="url" placeholder="https://...">
+                <label>رابط الفيديو</label><input name="video_url" type="text" inputmode="url" placeholder="الصق أي رابط فيديو أو رابط تضمين هنا">
                 <button type="submit">إضافة</button>
             </form>
         </section>
@@ -56,7 +56,7 @@
                             </select>
                             <label>وصف</label><textarea name="description">{{ l.description or '' }}</textarea>
                             <label>محتوى الدرس</label><textarea name="content">{{ l.content or '' }}</textarea>
-                            <label>رابط الفيديو</label><input name="video_url" type="url" value="{{ l.video_url or '' }}">
+                            <label>رابط الفيديو</label><input name="video_url" type="text" inputmode="url" value="{{ l.video_url or '' }}">
                             <button type="submit">حفظ التغييرات</button>
                         </form>
                     </details>
