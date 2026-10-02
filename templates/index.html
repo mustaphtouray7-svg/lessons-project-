@@ -12,13 +12,10 @@
         <nav>
             <a href="/">الرئيسية</a>
             <a href="/lessons">الدروس</a>
-            {% if session.username %}
-            <a href="/dashboard">لوحة الطالب</a>
-            <a href="/logout">تسجيل الخروج</a>
-            {% else %}
             <a href="/login">تسجيل الدخول</a>
             <a href="/register">إنشاء حساب</a>
-            {% endif %}
+            <a href="/dashboard">لوحة الطالب</a>
+            <a href="/logout">تسجيل الخروج</a>
         </nav>
     </header>
 
