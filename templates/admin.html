@@ -69,12 +69,29 @@
             </ul>
         </section>
         <section>
-            <h3>المستخدمون المسجلون</h3>
-            <ul class="admin-list">
-                {% for u in users %}
-                <li>{{ u.username }} - {{ u.email }} - {{ u.created_at.strftime('%Y-%m-%d') }}</li>
-                {% else %}<li>لا يوجد مستخدمون.</li>{% endfor %}
-            </ul>
+            <h3>الطلاب المسجلون</h3>
+            <div style="overflow-x:auto;">
+                <table class="activity-table">
+                    <thead>
+                        <tr>
+                            <th>اسم المستخدم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>تاريخ التسجيل</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td>{{ u.username }}</td>
+                            <td>{{ u.email }}</td>
+                            <td>{{ u.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3">لا يوجد طلاب مسجلون.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </section>
         <section>
             <h3>نشاطات الطلاب</h3>
@@ -84,7 +101,8 @@
                         <tr>
                             <th>اسم المستخدم</th>
                             <th>البريد الإلكتروني</th>
-                            <th>الدرس الذي شاهده</th>
+                            <th>الدرس</th>
+                            <th>نوع النشاط</th>
                             <th>وقت النشاط</th>
                         </tr>
                     </thead>
@@ -94,10 +112,11 @@
                             <td>{{ user.username }}</td>
                             <td>{{ user.email }}</td>
                             <td>{{ lesson.title if lesson else '—' }}</td>
+                            <td>{{ 'شاهد الدرس' if activity.action == 'viewed_lesson' else ('أكمل الدرس' if activity.action == 'completed_lesson' else activity.action) }}</td>
                             <td>{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="4">لا توجد نشاطات طلابية.</td></tr>
+                        <tr><td colspan="5">لا توجد نشاطات طلابية.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
