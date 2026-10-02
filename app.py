@@ -500,20 +500,22 @@ def home():
             button_text="استكشف الدروس",
         )
 
-    lessons = (
-        Lesson.query
-        .order_by(Lesson.created_at.desc())
-        .limit(3)
-        .all()
-    )
-
-    categories = CATEGORY_NAMES
-
     return render_template(
         "index.html",
-        lessons=lessons,
         homepage=homepage,
-        categories=categories,
+    )
+
+
+# ---------------------------------------------------------
+# SUBJECTS PAGE
+# ---------------------------------------------------------
+
+@app.route("/subjects")
+def subjects():
+
+    return render_template(
+        "subjects.html",
+        category_names=CATEGORY_NAMES,
     )
 
 
