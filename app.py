@@ -500,9 +500,18 @@ def home():
             button_text="استكشف الدروس",
         )
 
+    lessons = (
+        Lesson.query
+        .filter_by(category="faraid")
+        .order_by(Lesson.created_at.desc())
+        .limit(3)
+        .all()
+    )
+
     return render_template(
         "index.html",
         homepage=homepage,
+        lessons=lessons,
     )
 
 
@@ -1124,15 +1133,11 @@ def lessons_list():
 
     per_page = 6
 
-    lessons_q = Lesson.query.order_by(
-        Lesson.created_at.desc()
+    lessons_q = (
+        Lesson.query
+        .filter_by(category="faraid")
+        .order_by(Lesson.created_at.desc())
     )
-
-    if category in CATEGORY_NAMES:
-
-        lessons_q = lessons_q.filter_by(
-            category=category
-        )
 
     if q:
 
