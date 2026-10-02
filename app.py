@@ -432,6 +432,15 @@ def create_tables_and_seed():
             db.session.add(admin)
             db.session.commit()
 
+    # Keep Lesson 1 linked to the TikTok video supplied by the administrator.
+    lesson_one = Lesson.query.filter(
+        Lesson.title.ilike("%درس 1%")
+    ).order_by(Lesson.id.asc()).first()
+
+    if lesson_one:
+        lesson_one.video_url = "https://www.tiktok.com/@mahad_alh_lalokanteh1998/video/7634945073771318535?_r=1&u_code=eifi0744ck3i38&preview_pb=0&sharer_language=en&_d=ec49f89i2h0ckl&share_item_id=7634945073771318535&source=h5_m&timestamp=1790903221&user_id=7466010692928685074&sec_user_id=MS4wLjABAAAAFDZeyH-SEhdqqO4tRkCDxL8inVLNwUhVgXnKjwnS6soqIqEvlLu33cq6R3EguYWA&social_share_type=0&utm_source=copy&utm_campaign=client_share&utm_medium=android&share_iid=7691848419414099720&share_link_id=da081bda-f144-4b14-bc02-3856462d2b33&share_app_id=1233&ugbiz_name=MAIN&ug_btm=b5836%2Cb2878&sp_root_share_link_id=da081bda-f144-4b14-bc02-3856462d2b33&link_reflow_popup_iteration_sharer=%7B%22click_empty_to_play%22%3A1%2C%22dynamic_cover%22%3A1%2C%22follow_to_play_duration%22%3A-1.0%7D"
+        db.session.commit()
+
     if Lesson.query.count() == 0:
 
         sample = [
