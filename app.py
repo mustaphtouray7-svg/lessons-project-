@@ -1253,9 +1253,11 @@ def admin_index():
     )
 
     activities = (
-        Activity.query
+        db.session.query(Activity, User, Lesson)
+        .join(User, Activity.user_id == User.id)
+        .outerjoin(Lesson, Activity.lesson_id == Lesson.id)
         .order_by(Activity.timestamp.desc())
-        .limit(50)
+        .limit(100)
         .all()
     )
 
