@@ -77,10 +77,31 @@
             </ul>
         </section>
         <section>
-            <h3>آخر النشاطات</h3>
-            <ul>
-                {% for a in activities %}<li>{{ a.timestamp.strftime('%Y-%m-%d %H:%M') }} - المستخدم: {{ a.user_id }} - {{ a.action }}</li>{% endfor %}
-            </ul>
+            <h3>نشاطات الطلاب</h3>
+            <div style="overflow-x:auto;">
+                <table class="activity-table">
+                    <thead>
+                        <tr>
+                            <th>اسم المستخدم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>الدرس الذي شاهده</th>
+                            <th>وقت النشاط</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity, user, lesson in activities %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ lesson.title if lesson else '—' }}</td>
+                            <td>{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4">لا توجد نشاطات طلابية.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </section>
     </main>
 </body>
