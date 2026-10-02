@@ -1385,10 +1385,12 @@ def admin_add_lesson():
         ""
     ).strip()
 
-    video_url = normalize_video_url(request.form.get(
+    # Store exactly the URL copied by the administrator.
+    # Normalization happens only when the lesson is displayed for playback.
+    video_url = request.form.get(
         "video_url",
         ""
-    ))
+    ).strip()
 
     category = normalize_category(
         request.form.get(
