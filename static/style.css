@@ -125,3 +125,11 @@ footer{background:var(--blue);color:var(--white);text-align:center;padding:18px;
 .right{text-align:right}
 .center{text-align:center}
 
+
+
+/* Student activity table */
+.activity-table{width:100%;border-collapse:collapse;background:var(--white);border:1px solid #d7e0e8;border-radius:12px;overflow:hidden;text-align:right}
+.activity-table th,.activity-table td{padding:13px 14px;border-bottom:1px solid #e5e9ed}
+.activity-table th{background:#eef3f7;color:var(--blue);font-weight:800}
+.activity-table td{color:var(--black);background:#fff}
+.activity-table tr:last-child td{border-bottom:none}
