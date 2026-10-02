@@ -19,6 +19,9 @@
         {% if lesson.video_url %}
             <div class="video" style="margin-top:16px">
                 <iframe width="100%" height="400" src="{{ lesson.video_url }}" title="video" frameborder="0" allowfullscreen></iframe>
+                <div style="margin-top:8px;text-align:center">
+                    <a href="{{ lesson.video_url }}" target="_blank" rel="noopener noreferrer">فتح الفيديو أو الرابط مباشرة</a>
+                </div>
             </div>
         {% endif %}
         <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
