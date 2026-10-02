@@ -1370,10 +1370,10 @@ def admin_add_lesson():
         ""
     ).strip()
 
-    video_url = request.form.get(
+    video_url = normalize_video_url(request.form.get(
         "video_url",
         ""
-    )
+    ))
 
     category = normalize_category(
         request.form.get(
