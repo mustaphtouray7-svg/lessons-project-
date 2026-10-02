@@ -1287,6 +1287,7 @@ def admin_index():
         students_count=students_count,
         lessons_count=lessons_count,
         activity_count=activity_count,
+        category_names=CATEGORY_NAMES,
     )
 
 
