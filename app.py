@@ -516,6 +516,62 @@ def home():
 
 
 # ---------------------------------------------------------
+# VIDEO LINK HELPERS
+# ---------------------------------------------------------
+
+def normalize_video_url(video_url):
+    """Accept common video links and convert known providers to embed URLs."""
+    from urllib.parse import urlparse, parse_qs
+
+    value = (video_url or "").strip()
+    if not value:
+        return ""
+
+    try:
+        parsed = urlparse(value)
+        host = (parsed.netloc or "").lower().split(":")[0]
+        path = parsed.path.rstrip("/")
+
+        # YouTube: watch, short youtu.be, shorts, and existing embed URLs.
+        if host in {"youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com"}:
+            if path == "/watch":
+                video_id = parse_qs(parsed.query).get("v", [""])[0]
+                if video_id:
+                    return f"https://www.youtube.com/embed/{video_id}"
+            if path.startswith("/shorts/"):
+                video_id = path.split("/", 2)[2]
+                if video_id:
+                    return f"https://www.youtube.com/embed/{video_id}"
+            if path.startswith("/embed/"):
+                return value
+
+        if host == "youtu.be":
+            video_id = path.lstrip("/").split("/", 1)[0]
+            if video_id:
+                return f"https://www.youtube.com/embed/{video_id}"
+
+        # TikTok post links can be converted to TikTok's player URL.
+        if host in {"tiktok.com", "www.tiktok.com", "m.tiktok.com"}:
+            parts = [part for part in path.split("/") if part]
+            if "video" in parts:
+                index = parts.index("video")
+                if index + 1 < len(parts):
+                    video_id = parts[index + 1].split("?")[0]
+                    if video_id.isdigit():
+                        return f"https://www.tiktok.com/player/v1/{video_id}"
+            if "/player/v1/" in path:
+                return value
+
+    except Exception:
+        # Keep unusual but valid URLs unchanged so the admin can still use them.
+        pass
+
+    # Any other URL is accepted unchanged. Whether an external site permits
+    # iframe embedding is controlled by that site, not by this application.
+    return value
+
+
+# ---------------------------------------------------------
 # CATEGORY PAGE
 # ---------------------------------------------------------
 
