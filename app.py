@@ -1263,6 +1263,7 @@ def admin_index():
 
     users = (
         User.query
+        .filter_by(is_admin=False)
         .order_by(User.created_at.desc())
         .all()
     )
