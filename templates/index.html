@@ -11,7 +11,7 @@
         <div class="logo">منصة علم الفرائض</div>
         <nav>
             <a href="/">الرئيسية</a>
-            <a href="/lessons">الدروس</a>
+            <a href="/subjects">المواد</a>
             {% if session.username %}
             <a href="/dashboard">لوحة الطالب</a>
             <a href="/logout">تسجيل الخروج</a>
@@ -21,39 +21,30 @@
             {% endif %}
         </nav>
     </header>
+
     <main>
         <section class="hero">
-            <h1>مرحباً بك في منصة علم الفرائض</h1>
-            <p>تعلّم بطريقة منظمة</p>
-            <form action="/lessons" method="get" class="search-box">
-                <input name="q" type="text" placeholder="ابحث عن درس...">
-                <button type="submit">بحث</button>
-            </form>
+            <h1>{{ homepage.title }}</h1>
+            <p>{{ homepage.description }}</p>
+            <a class="btn" href="/subjects">{{ homepage.button_text }}</a>
         </section>
+
         <div class="container">
-            <div class="section-title"><h2>المواد</h2></div>
-            <div class="cards">
-                {% for key, name in categories.items() %}
-                <div class="card lessons-card center">
-                    <h3>{{ name }}</h3>
-                    <a class="btn" href="/category/{{ key }}">عرض الدروس</a>
-                </div>
-                {% endfor %}
+            <div class="section-title">
+                <h2>المواد</h2>
+                <p>اختر المادة للانتقال إلى دروسها</p>
             </div>
-            <div class="section-title"><h2>أحدث الدروس</h2></div>
+
             <div class="cards">
-                {% for l in lessons %}
-                <div class="card lessons-card">
-                    <h3>{{ l.title }}</h3>
-                    <p>{{ l.description }}</p>
-                    <a href="/lesson/{{ l.id }}">عرض الدرس</a>
+                <div class="card lessons-card center">
+                    <h3>المواد</h3>
+                    <p>الفرائض والنحو والفقه</p>
+                    <a class="btn" href="/subjects">اختيار المادة</a>
                 </div>
-                {% else %}
-                <p>لا توجد دروس.</p>
-                {% endfor %}
             </div>
         </div>
     </main>
+
     <footer><p>منصة علم الفرائض</p></footer>
 </body>
 </html>
