@@ -523,7 +523,8 @@ def home():
     lessons = (
         Lesson.query
         .filter_by(category="faraid")
-        .order_by(Lesson.created_at.desc())
+        # Show the first three lessons in learning order on the homepage.
+        .order_by(Lesson.id.asc())
         .limit(3)
         .all()
     )
@@ -603,7 +604,8 @@ def category_lessons(category):
     lessons = (
         Lesson.query
         .filter_by(category=category)
-        .order_by(Lesson.created_at.desc())
+        # Keep the learning order consistent: 1, 2, 3, ...
+        .order_by(Lesson.id.asc())
         .all()
     )
 
@@ -1119,8 +1121,9 @@ def dashboard():
 
     per_page = 6
 
+    # Show lessons in learning order: Lesson 1, then Lesson 2, then Lesson 3.
     lessons_q = Lesson.query.order_by(
-        Lesson.created_at.desc()
+        Lesson.id.asc()
     )
 
     if q:
@@ -1212,7 +1215,8 @@ def lessons_list():
     lessons_q = (
         Lesson.query
         .filter_by(category="faraid")
-        .order_by(Lesson.created_at.desc())
+        # Students should see lessons in learning order.
+        .order_by(Lesson.id.asc())
     )
 
     if q:
