@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إعادة تعيين كلمة المرور</title>
+<link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+<main class="container admin-page">
+    <div class="admin-page-header">
+        <div><h2>إعادة تعيين كلمة المرور</h2><p class="muted">الحساب: {{ user.username }} — {{ user.email }}</p></div>
+        <a class="btn secondary-btn" href="{{ url_for('admin_users') }}">العودة إلى المستخدمين</a>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    <section class="admin-panel narrow-panel">
+        <p class="security-note">كلمة المرور الحالية غير قابلة للعرض. أدخل كلمة مرور جديدة؛ سيتم حفظها كتجزئة آمنة فقط.</p>
+        <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label>كلمة المرور الجديدة</label>
+            <input name="password" type="password" minlength="8" required autocomplete="new-password">
+            <label>تأكيد كلمة المرور</label>
+            <input name="confirm" type="password" minlength="8" required autocomplete="new-password">
+            <button type="submit">حفظ كلمة المرور الجديدة</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>
