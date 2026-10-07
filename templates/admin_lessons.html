@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إدارة الدروس</title>
+<link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+<main class="container admin-page">
+    <div class="admin-page-header">
+        <div>
+            <h2>إدارة الدروس</h2>
+            <p class="muted">إضافة وتعديل وحذف الدروس الموجودة في قاعدة البيانات.</p>
+        </div>
+        <a class="btn secondary-btn" href="{{ url_for('admin_index') }}">العودة إلى لوحة المشرف</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+
+    <section class="admin-panel">
+        <h3>إضافة درس جديد</h3>
+        <form method="post" action="{{ url_for('admin_add_lesson') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label>عنوان الدرس</label><input name="title" required>
+            <label>المادة</label>
+            <select name="category" required>
+                {% for key, name in category_names.items() %}<option value="{{ key }}">{{ name }}</option>{% endfor %}
+            </select>
+            <label>الوصف</label><textarea name="description"></textarea>
+            <label>محتوى الدرس</label><textarea name="content"></textarea>
+            <label>رابط الفيديو</label><input name="video_url" type="url" inputmode="url">
+            <button type="submit">إضافة الدرس</button>
+        </form>
+    </section>
+
+    <section class="admin-panel">
+        <h3>الدروس الحالية ({{ lessons|length }})</h3>
+        <div class="table-wrap">
+            <table class="activity-table">
+                <thead><tr><th>الدرس</th><th>المادة</th><th>الفيديو</th><th>الإجراءات</th></tr></thead>
+                <tbody>
+                {% for l in lessons %}
+                <tr>
+                    <td>{{ l.title }}</td>
+                    <td>{{ category_names.get(l.category, 'غير مصنف') }}</td>
+                    <td>{{ 'متوفر' if l.video_url else 'غير متوفر' }}</td>
+                    <td class="actions-cell">
+                        <details>
+                            <summary class="inline-action">تعديل</summary>
+                            <form method="post" action="{{ url_for('admin_edit_lesson', lesson_id=l.id) }}" class="compact-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <label>العنوان</label><input name="title" value="{{ l.title }}" required>
+                                <label>المادة</label>
+                                <select name="category" required>
+                                    {% for key, name in category_names.items() %}<option value="{{ key }}" {% if l.category == key %}selected{% endif %}>{{ name }}</option>{% endfor %}
+                                </select>
+                                <label>الوصف</label><textarea name="description">{{ l.description or '' }}</textarea>
+                                <label>المحتوى</label><textarea name="content">{{ l.content or '' }}</textarea>
+                                <label>رابط الفيديو</label><input name="video_url" type="url" value="{{ l.video_url or '' }}">
+                                <button type="submit">حفظ التغييرات</button>
+                            </form>
+                        </details>
+                        <form method="post" action="{{ url_for('admin_delete_lesson', lesson_id=l.id) }}" class="inline-form" onsubmit="return confirm('هل تريد حذف هذا الدرس؟');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="danger-btn">حذف</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4">لا توجد دروس.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>
