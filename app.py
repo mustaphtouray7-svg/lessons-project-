@@ -1362,6 +1362,13 @@ def admin_index():
 
     activity_count = Activity.query.count()
 
+    video_count = Lesson.query.filter(
+        Lesson.video_url.isnot(None),
+        func.trim(Lesson.video_url) != ""
+    ).count()
+
+    accounts_count = User.query.count()
+
     return render_template(
         "admin.html",
         lessons=lessons,
@@ -1370,7 +1377,116 @@ def admin_index():
         students_count=students_count,
         lessons_count=lessons_count,
         activity_count=activity_count,
+        video_count=video_count,
+        accounts_count=accounts_count,
         category_names=CATEGORY_NAMES,
+    )
+
+
+# ---------------------------------------------------------
+# ADMIN MANAGEMENT PAGES
+# ---------------------------------------------------------
+
+@app.route("/admin/lessons")
+@admin_required
+def admin_lessons():
+    lessons = Lesson.query.order_by(Lesson.created_at.desc()).all()
+    return render_template(
+        "admin_lessons.html",
+        lessons=lessons,
+        category_names=CATEGORY_NAMES,
+    )
+
+
+@app.route("/admin/videos")
+@admin_required
+def admin_videos():
+    videos = Lesson.query.filter(
+        Lesson.video_url.isnot(None),
+        func.trim(Lesson.video_url) != ""
+    ).order_by(Lesson.created_at.desc()).all()
+    return render_template(
+        "admin_videos.html",
+        videos=videos,
+        category_names=CATEGORY_NAMES,
+    )
+
+
+@app.route("/admin/users")
+@admin_required
+def admin_users():
+    users = User.query.filter_by(
+        is_admin=False
+    ).order_by(User.created_at.desc()).all()
+    return render_template(
+        "admin_users.html",
+        users=users,
+    )
+
+
+@app.route("/admin/activity")
+@admin_required
+def admin_activity():
+    activities = (
+        db.session.query(Activity, User, Lesson)
+        .join(User, Activity.user_id == User.id)
+        .outerjoin(Lesson, Activity.lesson_id == Lesson.id)
+        .order_by(Activity.timestamp.desc())
+        .limit(500)
+        .all()
+    )
+    return render_template(
+        "admin_activity.html",
+        activities=activities,
+    )
+
+
+@app.route("/admin/accounts")
+@admin_required
+def admin_accounts():
+    accounts = User.query.order_by(User.created_at.desc()).all()
+    return render_template(
+        "admin_accounts.html",
+        accounts=accounts,
+    )
+
+
+@app.route(
+    "/admin/users/<int:user_id>/reset",
+    methods=["GET", "POST"]
+)
+@admin_required
+def admin_reset_user(user_id):
+    user = db.session.get(User, user_id)
+
+    if not user:
+        abort(404)
+
+    if user.is_admin:
+        flash("لا يمكن إعادة تعيين كلمة مرور المدير من هذه الصفحة.", "error")
+        return redirect(url_for("admin_users"))
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm", "")
+
+        if len(password) < 8:
+            flash("يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.", "error")
+            return redirect(url_for("admin_reset_user", user_id=user.id))
+
+        if password != confirm:
+            flash("كلمتا المرور غير متطابقتين.", "error")
+            return redirect(url_for("admin_reset_user", user_id=user.id))
+
+        user.password_hash = generate_password_hash(password)
+        db.session.commit()
+
+        flash("تم تحديث كلمة المرور بشكل آمن. لم يتم حفظ كلمة المرور كنص واضح.", "success")
+        return redirect(url_for("admin_users"))
+
+    return render_template(
+        "admin_reset_user.html",
+        user=user,
     )
 
 
