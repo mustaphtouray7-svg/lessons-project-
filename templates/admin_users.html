@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إدارة المستخدمين</title>
+<link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+<main class="container admin-page">
+    <div class="admin-page-header">
+        <div><h2>المستخدمون</h2><p class="muted">المستخدمون المسجلون في المنصة.</p></div>
+        <a class="btn secondary-btn" href="{{ url_for('admin_index') }}">العودة إلى لوحة المشرف</a>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    <section class="admin-panel">
+        <div class="table-wrap">
+            <table class="activity-table">
+                <thead><tr><th>الاسم</th><th>Gmail / البريد</th><th>تاريخ ووقت التسجيل</th><th>حالة كلمة المرور</th><th>إجراء</th></tr></thead>
+                <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>{{ u.created_at.strftime('%Y-%m-%d %H:%M') if u.created_at else '—' }}</td>
+                    <td><span class="password-status">مشفرة بشكل آمن</span></td>
+                    <td><a class="small-btn" href="{{ url_for('admin_reset_user', user_id=u.id) }}">إعادة تعيين كلمة المرور</a></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5">لا يوجد مستخدمون مسجلون.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="security-note">لا يتم عرض كلمات المرور الحالية أو تخزينها كنص واضح. إعادة التعيين تنشئ تجزئة جديدة آمنة.</p>
+    </section>
+</main>
+</body>
+</html>
