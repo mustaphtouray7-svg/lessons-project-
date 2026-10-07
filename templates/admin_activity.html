@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نشاط المستخدمين</title>
+<link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+<main class="container admin-page">
+    <div class="admin-page-header">
+        <div><h2>نشاط المستخدمين</h2><p class="muted">سجل الأنشطة المحفوظ في قاعدة البيانات.</p></div>
+        <a class="btn secondary-btn" href="{{ url_for('admin_index') }}">العودة إلى لوحة المشرف</a>
+    </div>
+    <section class="admin-panel">
+        <h3>إجمالي النشاطات المعروضة: {{ activities|length }}</h3>
+        <div class="table-wrap">
+            <table class="activity-table">
+                <thead><tr><th>المستخدم</th><th>البريد الإلكتروني</th><th>الدرس</th><th>النشاط</th><th>الوقت</th></tr></thead>
+                <tbody>
+                {% for activity, user, lesson in activities %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ lesson.title if lesson else '—' }}</td>
+                    <td>{{ 'شاهد الدرس' if activity.action == 'viewed_lesson' else ('أكمل الدرس' if activity.action == 'completed_lesson' else activity.action) }}</td>
+                    <td>{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') if activity.timestamp else '—' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5">لا توجد نشاطات مسجلة.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>
