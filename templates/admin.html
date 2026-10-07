@@ -16,12 +16,33 @@
         {% endwith %}
         <section>
             <h3>إحصائيات</h3>
-            <div class="cards" style="grid-template-columns:repeat(3,1fr);">
-                <div class="card center"><h4>المستخدمون</h4><p>{{ students_count }}</p></div>
-                <div class="card center"><h4>الدروس</h4><p>{{ lessons_count }}</p></div>
-                <div class="card center"><h4>النشاطات</h4><p>{{ activity_count }}</p></div>
-            </div>
-        </section>
+            <div class="admin-dashboard-cards">
+                <a class="admin-stat-card" href="{{ url_for('admin_lessons') }}">
+                    <span class="admin-stat-label">الدروس</span>
+                    <strong class="admin-stat-number">{{ lessons_count }}</strong>
+                    <span class="admin-stat-action">إدارة الدروس</span>
+                </a>
+                <a class="admin-stat-card" href="{{ url_for('admin_users') }}">
+                    <span class="admin-stat-label">المستخدمون</span>
+                    <strong class="admin-stat-number">{{ students_count }}</strong>
+                    <span class="admin-stat-action">إدارة المستخدمين</span>
+                </a>
+                <a class="admin-stat-card" href="{{ url_for('admin_videos') }}">
+                    <span class="admin-stat-label">الفيديوهات</span>
+                    <strong class="admin-stat-number">{{ video_count }}</strong>
+                    <span class="admin-stat-action">إدارة الفيديوهات</span>
+                </a>
+                <a class="admin-stat-card" href="{{ url_for('admin_activity') }}">
+                    <span class="admin-stat-label">النشاط</span>
+                    <strong class="admin-stat-number">{{ activity_count }}</strong>
+                    <span class="admin-stat-action">عرض النشاط</span>
+                </a>
+                <a class="admin-stat-card" href="{{ url_for('admin_accounts') }}">
+                    <span class="admin-stat-label">الحسابات</span>
+                    <strong class="admin-stat-number">{{ accounts_count }}</strong>
+                    <span class="admin-stat-action">إدارة الحسابات</span>
+                </a>
+            </div>        </section>
         <section>
             <h3>إضافة درس جديد</h3>
             <form method="post" action="/admin/add">
